@@ -3,6 +3,9 @@ import { z } from 'zod'
 export const ConnectionSchema = z.object({
   id: z.string().uuid(),
   name: z.string().trim().min(1).max(80),
+  kind: z.enum(['openai-compatible', 'chatgpt']).default('openai-compatible'),
+  authenticated: z.boolean().default(false),
+  modelContexts: z.record(z.string(), z.number().int().positive()).default({}),
   baseUrl: z
     .url()
     .refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
@@ -51,8 +54,19 @@ export type ChatEvent = {
   error?: string
   state?: State
 }
+export type ChatGPTAuthEvent = {
+  status: 'waiting' | 'exchanging'
+  url?: string
+  message: string
+}
 export interface NookAPI {
   load(): Promise<State>
+  loginChatGPT(): Promise<State>
+  cancelChatGPTLogin(): Promise<void>
+  reopenChatGPTLogin(): Promise<void>
+  submitChatGPTCallback(url: string): Promise<void>
+  logoutChatGPT(): Promise<State>
+  onChatGPTAuth(listener: (event: ChatGPTAuthEvent) => void): () => void
   saveAgent(agent: Agent): Promise<State>
   saveConnection(connection: Connection, apiKey?: string): Promise<State>
   discoverModels(

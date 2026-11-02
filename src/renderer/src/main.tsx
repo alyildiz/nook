@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import type { Agent, Connection, NookAPI, State } from '../../shared/contracts'
 import './styles.css'
+import { ChatGPTConnection } from './ChatGPTConnection'
 
 declare global {
   interface Window {
@@ -198,9 +199,12 @@ function App() {
               <h1>{agent?.name || 'Nook'}</h1>
               <span className="model-label">
                 <span
-                  className={`status-dot ${connection ? 'connected' : ''}`}
+                  className={`status-dot ${connection && (connection.kind !== 'chatgpt' || connection.authenticated) ? 'connected' : ''}`}
                 />
                 {agent?.model || 'Aucun modèle connecté'}
+                {connection?.kind === 'chatgpt' &&
+                  !connection.authenticated &&
+                  ' · À reconnecter'}
               </span>
             </div>
           </div>
@@ -315,7 +319,7 @@ function App() {
             <span>{connection?.name || 'Votre espace, vos agents.'}</span>
             <span title="Tokens du dernier appel, pas une mesure exacte du contexte actuel">
               {conversation?.inputTokens !== undefined
-                ? `Dernière entrée : ${conversation.inputTokens.toLocaleString('fr')} tokens · fenêtre ${connection?.contextWindow.toLocaleString('fr')}`
+                ? `Dernière entrée : ${conversation.inputTokens.toLocaleString('fr')} tokens · fenêtre ${(connection?.modelContexts[agent?.model || ''] || connection?.contextWindow)?.toLocaleString('fr')}`
                 : 'Historique enregistré sur cet appareil'}
             </span>
           </div>
@@ -337,6 +341,8 @@ function App() {
       {modal === 'settings' && (
         <SettingsDialog
           connections={state.connections}
+          agent={agent}
+          onState={setState}
           onClose={() => setModal(null)}
           onSave={async (value, key) => {
             setState(await window.nook.saveConnection(value, key))
@@ -534,21 +540,29 @@ function AgentDialog({
 }
 function SettingsDialog({
   connections,
+  agent,
+  onState,
   onSave,
   onClose
 }: {
   connections: Connection[]
+  agent?: Agent
+  onState: (state: State) => void
   onSave: (value: Connection, key?: string) => Promise<void>
   onClose: () => void
 }) {
   const fresh = (): Connection => ({
     id: uid(),
     name: '',
+    kind: 'openai-compatible',
+    authenticated: false,
+    modelContexts: {},
     baseUrl: '',
     models: [],
     contextWindow: 32768
   })
-  const [value, setValue] = useState<Connection>(connections[0] || fresh())
+  const compatible = connections.filter((c) => c.kind !== 'chatgpt')
+  const [value, setValue] = useState<Connection>(compatible[0] || fresh())
   const [key, setKey] = useState(''),
     [keyChanged, setKeyChanged] = useState(false)
   const [models, setModels] = useState(value.models.join('\n'))
@@ -569,8 +583,15 @@ function SettingsDialog({
         Connectez vos modèles une fois. Choisissez ensuite celui de chaque
         agent.
       </p>
+      <ChatGPTConnection
+        connection={connections.find((c) => c.kind === 'chatgpt')}
+        agent={agent}
+        onState={onState}
+        onClose={onClose}
+      />
+      <h3 className="connection-section-title">Autres connexions</h3>
       <div className="connection-tabs">
-        {connections.map((c) => (
+        {compatible.map((c) => (
           <button
             className={`secondary ${value.id === c.id ? 'active' : ''}`}
             key={c.id}
@@ -702,16 +723,6 @@ function SettingsDialog({
             }
           />
         </label>
-        <div className="notice">
-          <Cpu size={19} />
-          <span>
-            <strong>Abonnement ChatGPT</strong>
-            <br />
-            La connexion directe par navigateur n’est pas encore intégrée. Un
-            abonnement Plus n’est pas une clé API. Cette version peut utiliser
-            une passerelle LiteLLM déjà authentifiée.
-          </span>
-        </div>
         {error && (
           <p className="error" role="alert">
             {error}

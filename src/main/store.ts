@@ -84,6 +84,13 @@ export function saveAgent(agent: Agent) {
   save(state)
   return state
 }
+export function hasKey(id: string): boolean {
+  const path = join(directory(), 'credentials.json')
+  if (!existsSync(path)) return false
+  return Boolean(
+    (JSON.parse(readFileSync(path, 'utf8')) as Record<string, string>)[id]
+  )
+}
 export function getKey(id: string): string {
   const path = join(directory(), 'credentials.json')
   if (!existsSync(path)) return ''
@@ -92,21 +99,24 @@ export function getKey(id: string): string {
     ? safeStorage.decryptString(Buffer.from(keys[id], 'base64'))
     : ''
 }
+export function assertSecureStorage() {
+  if (
+    !safeStorage.isEncryptionAvailable() ||
+    (process.platform === 'linux' &&
+      safeStorage.getSelectedStorageBackend() === 'basic_text')
+  ) {
+    throw new Error(
+      'Le coffre-fort système est indisponible. Aucun identifiant ne sera enregistré en clair.'
+    )
+  }
+}
 export function setKey(id: string, key: string) {
   const path = join(directory(), 'credentials.json')
   const keys: Record<string, string> = existsSync(path)
     ? JSON.parse(readFileSync(path, 'utf8'))
     : {}
   if (key) {
-    if (
-      !safeStorage.isEncryptionAvailable() ||
-      (process.platform === 'linux' &&
-        safeStorage.getSelectedStorageBackend() === 'basic_text')
-    ) {
-      throw new Error(
-        'Le coffre-fort système est indisponible. La clé ne sera pas enregistrée en clair.'
-      )
-    }
+    assertSecureStorage()
     keys[id] = safeStorage.encryptString(key).toString('base64')
   } else delete keys[id]
   writeAtomic(path, JSON.stringify(keys))

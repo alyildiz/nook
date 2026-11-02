@@ -1,0 +1,96 @@
+.chatgpt-card {
+  border: 1px solid #454a42;
+  background: #292c27;
+  border-radius: 14px;
+  padding: 18px;
+  margin: 20px 0 25px;
+}
+.chatgpt-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.chatgpt-title h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 550;
+}
+.chatgpt-title p {
+  color: #b8beb1;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+.connected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--mint);
+  font-size: 11px;
+  white-space: nowrap;
+  padding-top: 3px;
+}
+.connection-section-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: 25px;
+}
+.auth-progress {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #d5decf;
+  margin-top: 14px;
+}
+.auth-progress svg {
+  flex-shrink: 0;
+  animation: spin 1.5s linear infinite;
+}
+.auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.auth-fallback {
+  margin-top: 17px;
+  font-size: 12px;
+}
+.auth-fallback summary {
+  color: #bfcbb5;
+  cursor: pointer;
+  line-height: 1.6;
+}
+.auth-fallback input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #42423f;
+  border-radius: 8px;
+  background: #1d1d1c;
+  color: #eee;
+  margin-bottom: 10px;
+}
+.oauth-model-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 12px;
+}
+.oauth-model-label select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #454a42;
+  border-radius: 8px;
+  background: #1d1d1c;
+  color: #eee;
+}
+.chatgpt-card .error {
+  margin-top: 14px;
+  margin-bottom: 0;
+}

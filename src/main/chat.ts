@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { load, save, getKey } from './store'
-import type { ChatEvent, Conversation } from '../shared/contracts'
+import type { ChatEvent } from '../shared/contracts'
+import { streamChatGPT } from './chatgpt'
 
 const runs = new Map<string, AbortController>()
 const busyAgents = new Set<string>()
@@ -61,6 +62,7 @@ export async function send(
     { role: 'system', content: agent.instructions },
     ...current.messages.map((m) => ({ role: m.role, content: m.content }))
   ]
+  const history = [...current.messages]
   const reply = {
     id: crypto.randomUUID(),
     role: 'assistant' as const,
@@ -83,6 +85,24 @@ export async function send(
     return latest
   }
   try {
+    if (connection.kind === 'chatgpt') {
+      const usage = await streamChatGPT(
+        connection,
+        agent.model,
+        agent.instructions,
+        history,
+        AbortSignal.any([controller.signal, AbortSignal.timeout(180000)]),
+        (delta) => {
+          reply.content += delta
+          emit({ runId, delta })
+        }
+      )
+      current.inputTokens = usage.input
+      current.outputTokens = usage.output
+      reply.incomplete = false
+      emit({ runId, done: true, state: persist() })
+      return
+    }
     const key = getKey(connection.id)
     const response = await fetch(
       endpoint(connection.baseUrl, 'chat/completions'),

@@ -15,12 +15,15 @@
 
 ## 2. Standalone provider access
 
-- [ ] Spike LiteLLM packaged as a companion process on Windows x64 and macOS arm64.
-- [ ] Compare with a TypeScript provider library against the same requirements before committing to the runtime.
-- [ ] ChatGPT OAuth device login, refresh, logout and revocation handling, with protected credentials and account-specific model availability.
-- [ ] No manual Python installation or external gateway required for subscription login.
+- [x] Use the embedded pi-ai TypeScript connector for ChatGPT/Codex; keep LiteLLM as an optional external gateway rather than bundling Python.
+- [x] Browser OAuth login with PKCE, cancellation, protected rotating credentials, refresh, local logout and readable authorization/quota errors.
+- [x] No manual Python installation or external gateway required for subscription login.
+- [x] Bundled connector model catalog and per-model context metadata; clearly distinguish catalog entries from account entitlements.
+- [ ] Verify login and a real subscription response on the user's Windows PC.
+- [ ] Account-specific model discovery, if the provider exposes a supported entitlement endpoint.
 - [ ] Direct Anthropic connection and real-provider smoke tests.
-- [ ] Per-model capabilities and context windows, not connection-level assumptions.
+- [x] Per-model context windows for ChatGPT.
+- [ ] Per-model capabilities and context windows for other providers, not connection-level assumptions.
 - [ ] Prevent inadvertent provider changes from sending private conversation history to a different destination without confirmation.
 
 ## 3. Agent capabilities
